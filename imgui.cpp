@@ -2127,6 +2127,7 @@ ImFileHandle ImFileOpen(ImStrv filename, ImStrv mode)
     return ::_wfopen((const wchar_t*)&buf[0], (const wchar_t*)&buf[filename_wsize + 1]);
 #else
     // ImStrv is not guaranteed to be zero-terminated.
+    // FIXME: Use TempBuffer to avoid needlessly allocating.
     ImStrv filename_0 = ImStrdup(filename);
     ImStrv mode_0 = ImStrdup(mode);
     ImFileHandle handle = fopen(filename_0.Begin, mode_0.Begin);
