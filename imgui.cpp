@@ -2121,10 +2121,10 @@ ImFileHandle ImFileOpen(ImStrv filename, ImStrv mode)
     ImGuiContext& g = *GImGui;
     g.TempBuffer.reserve((filename_wsize + 1 + mode_wsize + 1) * sizeof(wchar_t));
     wchar_t* buf = (wchar_t*)(void*)g.TempBuffer.Data;
-    ::MultiByteToWideChar(CP_UTF8, 0, filename.Begin, (int)filename.length(), (wchar_t*)&buf[0], filename_wsize);
-    ::MultiByteToWideChar(CP_UTF8, 0, mode.Begin, (int)mode.length(), (wchar_t*)&buf[filename_wsize + 1], mode_wsize);
+    ::MultiByteToWideChar(CP_UTF8, 0, filename.Begin, (int)filename.length(), &buf[0], filename_wsize);
+    ::MultiByteToWideChar(CP_UTF8, 0, mode.Begin, (int)mode.length(), &buf[filename_wsize + 1], mode_wsize);
     buf[filename_wsize] = buf[filename_wsize + 1 + mode_wsize] = 0;
-    return ::_wfopen((const wchar_t*)&buf[0], (const wchar_t*)&buf[filename_wsize + 1]);
+    return ::_wfopen(&buf[0], &buf[filename_wsize + 1]);
 #else
     // ImStrv is not guaranteed to be zero-terminated.
     // FIXME: Use TempBuffer to avoid needlessly allocating.
