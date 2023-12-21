@@ -7095,7 +7095,8 @@ static void DebugLogMultiSelectRequests(const char* function, const ImGuiMultiSe
     }
 }
 
-// Return ImGuiMultiSelectIO structure. Lifetime: valid until corresponding call to EndMultiSelect().
+// Return ImGuiMultiSelectIO structure.
+// Lifetime: don't hold on ImGuiMultiSelectIO* pointers over multiple frames or past any subsequent call to BeginMultiSelect() or EndMultiSelect().
 ImGuiMultiSelectIO* ImGui::BeginMultiSelect(ImGuiMultiSelectFlags flags)
 {
     ImGuiContext& g = *GImGui;
@@ -7198,7 +7199,8 @@ ImGuiMultiSelectIO* ImGui::BeginMultiSelect(ImGuiMultiSelectFlags flags)
     return &ms->IO;
 }
 
-// Return updated ImGuiMultiSelectIO structure. Lifetime: until EndFrame() or next BeginMultiSelect() call.
+// Return updated ImGuiMultiSelectIO structure.
+// Lifetime: don't hold on ImGuiMultiSelectIO* pointers over multiple frames or past any subsequent call to BeginMultiSelect() or EndMultiSelect().
 ImGuiMultiSelectIO* ImGui::EndMultiSelect()
 {
     ImGuiContext& g = *GImGui;
