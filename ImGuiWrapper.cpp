@@ -3453,6 +3453,72 @@ bool ImGui::TempInputScalar(const ImRect& bb, ImGuiID id, const char* label, ImG
     return value_changed;
 }
 
+bool IsZero(ImGuiDataType data_type, const void* value)
+{
+    switch (data_type)
+    {
+        case ImGuiDataType_S8:
+            return ImS8(0) == (*(const ImS8*)p_data);
+        case ImGuiDataType_U8:
+            return ImU8(0) == (*(const ImU8*)p_data);
+        case ImGuiDataType_S16:
+            return ImS16(0) == (*(const ImS16*)p_data);
+        case ImGuiDataType_U16:
+            return ImU16(0) == (*(const ImU16*)p_data);
+        case ImGuiDataType_S32:
+            return ImS32(0) == (*(const ImS32*)p_data);
+        case ImGuiDataType_U32:
+            return ImU32(0) == (*(const ImU32*)p_data);
+        case ImGuiDataType_S64:
+            return ImS64(0) == (*(const ImS64*)p_data);
+        case ImGuiDataType_U64:
+            return ImU64(0) == (*(const ImU64*)p_data);
+        case ImGuiDataType_Float:
+            return 0.f == (*(const float*)p_data);
+        case ImGuiDataType_Double:
+            return 0. == (*(const double*)p_data);
+        default: return false;
+    }
+}
+
+void SetZero(ImGuiDataType data_type, void* value)
+{
+    switch (data_type)
+    {
+        case ImGuiDataType_S8:
+            (*(ImS8*)p_data) = ImS8(0);
+            return;
+        case ImGuiDataType_U8:
+            (*(ImU8*)p_data) = ImU8(0);
+            return;
+        case ImGuiDataType_S16:
+            (*(ImS16*)p_data) = ImS16(0);
+            return;
+        case ImGuiDataType_U16:
+            (*(ImU16*)p_data) = ImU16(0);
+            return;
+        case ImGuiDataType_S32:
+            (*(ImS32*)p_data) = ImS32(0);
+            return;
+        case ImGuiDataType_U32:
+            (*(ImU32*)p_data) = ImU32(0);
+            return;
+        case ImGuiDataType_S64:
+            (*(ImS64*)p_data) = ImS64(0);
+            return;
+        case ImGuiDataType_U64:
+            (*(ImU64*)p_data) = ImU64(0);
+            return;
+        case ImGuiDataType_Float:
+            (*(float*)p_data) = 0.f;
+            return;
+        case ImGuiDataType_Double:
+            (*(double*)p_data) = 0.;
+            return;
+        default: return;
+    }
+}
+
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
 bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_step, const void* p_step_fast, const char* format, ImGuiInputTextFlags flags)
@@ -3469,6 +3535,8 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
 
     char buf[64];
     DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, p_data, format);
+    if ((flags & ImGuiInputTextFlags_EmptyZero) && IsZero(data_type, p_data))
+        buf[0] = 0;
 
     flags |= ImGuiInputTextFlags_AutoSelectAll | (ImGuiInputTextFlags)ImGuiInputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
@@ -3476,7 +3544,11 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
     if (p_step == NULL)
     {
         if (InputText(label, buf, IM_ARRAYSIZE(buf), flags))
-            value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
+            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyZero)) {
+                SetZero(data_type, p_data);
+                value_changed = memcmp(&data_backup, p_data, DataTypeGetInfo(data_type)->Size) != 0;
+            } else 
+                value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
     }
     else
     {
@@ -3485,8 +3557,13 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
         BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
         PushID(label);
         SetNextItemWidth(ImMax(1.0f, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
-        if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) // PushId(label) + "" gives us the expected ID from outside point of view
-            value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
+        if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) { // PushId(label) + "" gives us the expected ID from outside point of view
+            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyZero)) {
+                SetZero(data_type, p_data);
+                value_changed = memcmp(&data_backup, p_data, DataTypeGetInfo(data_type)->Size) != 0;
+            } else 
+                value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
+        }
         IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Inputable);
 
         // Step buttons
