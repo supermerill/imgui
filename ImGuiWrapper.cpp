@@ -3535,7 +3535,8 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
 
     char buf[64];
     DataTypeFormatString(buf, IM_ARRAYSIZE(buf), data_type, p_data, format);
-    if ((flags & ImGuiInputTextFlags_EmptyZero) && IsZero(data_type, p_data))
+    // If the current value is the default (0), then empty the input.
+    if ((flags & ImGuiInputTextFlags_EmptyDefaultToZero) && IsZero(data_type, p_data))
         buf[0] = 0;
 
     flags |= ImGuiInputTextFlags_AutoSelectAll | (ImGuiInputTextFlags)ImGuiInputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
@@ -3544,7 +3545,8 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
     if (p_step == NULL)
     {
         if (InputText(label, buf, IM_ARRAYSIZE(buf), flags))
-            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyZero)) {
+            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyDefaultToZero)) {
+                // The input is empty, set its value to the default (0)
                 SetZero(data_type, p_data);
                 value_changed = memcmp(&data_backup, p_data, DataTypeGetInfo(data_type)->Size) != 0;
             } else 
@@ -3558,7 +3560,8 @@ bool ImGui::InputScalar(const char* label, ImGuiDataType data_type, void* p_data
         PushID(label);
         SetNextItemWidth(ImMax(1.0f, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
         if (InputText("", buf, IM_ARRAYSIZE(buf), flags)) { // PushId(label) + "" gives us the expected ID from outside point of view
-            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyZero)) {
+            if (buf[0] == 0 && (flags & ImGuiInputTextFlags_EmptyDefaultToZero)) {
+                // The input is empty, set its value to the default (0)
                 SetZero(data_type, p_data);
                 value_changed = memcmp(&data_backup, p_data, DataTypeGetInfo(data_type)->Size) != 0;
             } else 
